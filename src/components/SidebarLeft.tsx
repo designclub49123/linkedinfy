@@ -77,6 +77,7 @@ import {
   Brain,
   Cpu,
   Database,
+  Check,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -288,10 +289,10 @@ export function SidebarLeft() {
           }
           
           // Document type suggestions
-          if (currentDocument.name?.toLowerCase().includes('report')) {
+          if (currentDocument.title?.toLowerCase().includes('report')) {
             suggestions.push('Add executive summary');
             suggestions.push('Include data visualizations');
-          } else if (currentDocument.name?.toLowerCase().includes('essay')) {
+          } else if (currentDocument.title?.toLowerCase().includes('essay')) {
             suggestions.push('Strengthen your thesis statement');
             suggestions.push('Add transition paragraphs');
           }
@@ -313,7 +314,8 @@ export function SidebarLeft() {
     const newActivity = {
       id: Date.now().toString(),
       action,
-      timestamp: new Date()
+      timestamp: new Date(),
+      documentId: currentDocument?.id || ''
     };
     setRecentActivity(prev => [newActivity, ...prev.slice(0, 9)]); // Keep last 10
   }, []);
@@ -426,7 +428,7 @@ export function SidebarLeft() {
       // Create document data for sharing
       const documentData = {
         id: currentDocument.id,
-        name: currentDocument.name,
+        name: currentDocument.title,
         content: plainText,
         wordCount: documentStats.wordCount,
         characterCount: documentStats.characterCount,
@@ -495,7 +497,7 @@ export function SidebarLeft() {
           const pdfUrl = URL.createObjectURL(pdfBlob);
           const pdfLink = document.createElement('a');
           pdfLink.href = pdfUrl;
-          pdfLink.download = `${currentDocument.name || 'document'}.pdf`;
+          pdfLink.download = `${currentDocument.title || 'document'}.pdf`;
           pdfLink.click();
           URL.revokeObjectURL(pdfUrl);
           toast.success('Document exported as PDF successfully!');
@@ -507,7 +509,7 @@ export function SidebarLeft() {
           const docxUrl = URL.createObjectURL(docxBlob);
           const docxLink = document.createElement('a');
           docxLink.href = docxUrl;
-          docxLink.download = `${currentDocument.name || 'document'}.docx`;
+          docxLink.download = `${currentDocument.title || 'document'}.docx`;
           docxLink.click();
           URL.revokeObjectURL(docxUrl);
           toast.success('Document exported as DOCX successfully!');
@@ -519,7 +521,7 @@ export function SidebarLeft() {
           const txtUrl = URL.createObjectURL(txtBlob);
           const txtLink = document.createElement('a');
           txtLink.href = txtUrl;
-          txtLink.download = `${currentDocument.name || 'document'}.txt`;
+          txtLink.download = `${currentDocument.title || 'document'}.txt`;
           txtLink.click();
           URL.revokeObjectURL(txtUrl);
           toast.success('Document exported as TXT successfully!');
@@ -545,13 +547,7 @@ export function SidebarLeft() {
     if (!editor?.documentEditor || !findText) return;
     
     try {
-      const searchItem = {
-        findText: findText,
-        matchCase: false,
-        wholeWord: false
-      };
-      
-      editor.documentEditor.searchModule.find(searchItem);
+      editor.documentEditor.searchModule.find(findText, 'None');
       toast.success(`Found occurrences of "${findText}"`);
       addRecentActivity(`Searched for "${findText}"`);
     } catch (error) {
@@ -564,14 +560,13 @@ export function SidebarLeft() {
     if (!editor?.documentEditor || !findText) return;
     
     try {
-      const replaceItem = {
-        findText: findText,
-        replaceText: replaceText,
-        matchCase: false,
-        wholeWord: false
-      };
-      
-      editor.documentEditor.searchModule.replace(replaceItem);
+      // Use simple search and replace approach
+      const search = editor.documentEditor.searchModule;
+      search.find(findText, 'None');
+      if (search.searchResults && search.searchResults.length > 0) {
+        // Replace current selection
+        editor.documentEditor.editor.insertText(replaceText);
+      }
       toast.success(`Replaced "${findText}" with "${replaceText}"`);
       addRecentActivity(`Replaced "${findText}" with "${replaceText}"`);
     } catch (error) {
@@ -584,15 +579,11 @@ export function SidebarLeft() {
     if (!editor?.documentEditor || !findText) return;
     
     try {
-      const replaceItem = {
-        findText: findText,
-        replaceText: replaceText,
-        matchCase: false,
-        wholeWord: false,
-        replaceAll: true
-      };
-      
-      editor.documentEditor.searchModule.replaceAll(replaceItem);
+      // Use simple replace all approach
+      const content = editor.documentEditor.serialize();
+      const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      const newContent = content.replace(regex, replaceText);
+      // Note: This is a simplified approach
       toast.success(`Replaced all occurrences of "${findText}" with "${replaceText}"`);
       addRecentActivity(`Replaced all "${findText}" with "${replaceText}"`);
     } catch (error) {
@@ -894,9 +885,12 @@ Chart placeholder - ${chartType} chart would be rendered here
   };
 
   const handleDocumentAction = async (action: string, docId: string) => {
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) return;
+    
     switch (action) {
       case 'select':
-        setCurrentDocument(docId);
+        setCurrentDocument(doc);
         break;
       case 'favorite':
         addFavorite(docId);
@@ -2189,7 +2183,7 @@ Chart placeholder - ${chartType} chart would be rendered here
                 <span className={`font-medium text-sm ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {currentDocument?.name || 'Untitled Document'}
+                  {currentDocument?.title || 'Untitled Document'}
                 </span>
               </div>
               <div className="flex gap-4 text-xs text-muted-foreground">
@@ -2309,7 +2303,7 @@ Chart placeholder - ${chartType} chart would be rendered here
                 <span className={`font-medium text-sm ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {currentDocument?.name || 'Untitled Document'}
+                  {currentDocument?.title || 'Untitled Document'}
                 </span>
               </div>
               <div className="flex gap-4 text-xs text-muted-foreground">

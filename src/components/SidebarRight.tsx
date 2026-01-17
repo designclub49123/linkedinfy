@@ -240,7 +240,7 @@ export function SidebarRight() {
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(s);
       } else {
-        toast({ title: 'TTS not supported' });
+        toast.error('TTS not supported');
       }
     } catch (e) {
       console.error('TTS error', e);
@@ -250,12 +250,12 @@ export function SidebarRight() {
   const applyLastAssistant = () => {
     const last = messages.slice().reverse().find(m => m.role === 'assistant');
     if (!last || !last.content) {
-      toast({ title: 'No assistant response found' });
+      toast.error('No assistant response found');
       return;
     }
     const ev = new CustomEvent('applyContent', { detail: { content: last.content } });
     window.dispatchEvent(ev);
-    toast({ title: 'Applied last AI content' });
+    toast.success('Applied last AI content');
   };
 
   const showShortcuts = () => {
@@ -307,11 +307,7 @@ export function SidebarRight() {
     debounce((value: string) => {
       // Additional input processing if needed
       if (value.length > 10000) {
-        toast({
-          title: "Input Too Long",
-          description: "Please keep your message under 10,000 characters.",
-          variant: "destructive"
-        });
+        toast.error("Input too long. Please keep your message under 10,000 characters.");
        }
      }, 300),
      []
@@ -334,7 +330,7 @@ export function SidebarRight() {
           type: file.type,
         };
         setUploadedFiles(prev => [...prev, newFile]);
-        toast({ title: `Uploaded: ${file.name}` });
+        toast.success(`Uploaded: ${file.name}`);
       };
       reader.readAsText(file);
     });
@@ -420,10 +416,10 @@ export function SidebarRight() {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedMessageId(messageId);
-      toast({ title: "Message copied to clipboard" });
+      toast.success("Message copied to clipboard");
       setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (error) {
-      toast({ title: "Failed to copy message", variant: "destructive" });
+      toast.error("Failed to copy message");
     }
   }, []);
 
@@ -469,8 +465,8 @@ export function SidebarRight() {
   const handleNewChat = useCallback(() => {
     clearMessages();
     setInputValue('');
-    toast({ title: "New chat started" });
-  }, []);
+    toast.success("New chat started");
+  }, [clearMessages]);
 
   const handleSuggestionClick = useCallback((suggestion: typeof CHAT_SUGGESTIONS[0]) => {
     setInputValue(suggestion.prompt);
@@ -482,16 +478,16 @@ export function SidebarRight() {
     setShowTips(false);
     setShowQuickActions(false);
     inputRef.current?.focus();
-    toast({ title: "Tip applied to input" });
+    toast.success("Tip applied to input");
   }, []);
 
   const toggleRecording = () => {
     if (isRecording) {
       setIsRecording(false);
-      toast({ title: "Recording stopped" });
+      toast.success("Recording stopped");
     } else {
       setIsRecording(true);
-      toast({ title: "Recording started" });
+      toast.success("Recording started");
     }
   };
 
@@ -819,13 +815,6 @@ export function SidebarRight() {
                       <AIChatBubble
                         key={message.id}
                         message={message}
-                        theme={theme}
-                        onApplyContent={(content) => {
-                          const ev = new CustomEvent('applyContent', { detail: { content } });
-                          window.dispatchEvent(ev);
-                        }}
-                        onCopy={(content) => handleCopyMessage(content, message.id)}
-                        copiedMessageId={copiedMessageId}
                       />
                     ))}
                     
@@ -1095,7 +1084,6 @@ export function SidebarRight() {
                           <Icon className="h-4 w-4 flex-shrink-0" />
                           <div className="text-left flex-1 min-w-0">
                             <div className="font-medium truncate">{config.label}</div>
-                            <div className="text-muted-foreground text-xs truncate">{config.description}</div>
                           </div>
                         </Button>
                       );

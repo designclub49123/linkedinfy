@@ -351,8 +351,8 @@ export default function UsageAnalytics() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">{doc.wordCount} words</Badge>
-                            <Badge variant="secondary">{doc.template}</Badge>
+                            <Badge variant="outline">Document</Badge>
+                            <Badge variant="secondary">{doc.templateId || 'Custom'}</Badge>
                           </div>
                         </div>
                       ))}

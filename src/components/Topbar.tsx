@@ -210,14 +210,6 @@ export function Topbar() {
     <header className={`h-16 border-b flex items-center justify-between px-6 gap-4 relative z-50 transition-colors duration-200 ${
       theme === 'dark' 
         ? 'border-gray-800 bg-[#000000]' 
-        : theme === 'blue' 
-        ? 'border-blue-200 bg-blue-50'
-        : theme === 'green'
-        ? 'border-green-200 bg-green-50'
-        : theme === 'red'
-        ? 'border-red-200 bg-red-50'
-        : theme === 'orange'
-        ? 'border-orange-200 bg-orange-50'
         : 'border-gray-200 bg-white'
     }`}>
       {/* Logo & Document Section */}

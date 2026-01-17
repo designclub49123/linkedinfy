@@ -107,7 +107,7 @@ export function WizardForm({ type }: WizardFormProps) {
             Step {wizardStep + 1} of {steps.length}
           </p>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={cancelWizard}>
+        <Button variant="ghost" size="icon" onClick={cancelWizard}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -148,7 +148,7 @@ export function WizardForm({ type }: WizardFormProps) {
         </Button>
 
         <Button
-          variant={isLastStep ? 'ai' : 'default'}
+          variant={isLastStep ? 'default' : 'default'}
           size="sm"
           onClick={handleNext}
           disabled={

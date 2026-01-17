@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   Send,
   Loader2,
+  Edit3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -306,7 +307,7 @@ export default function WritingAssistant() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <Edit className="h-5 w-5" />
+                    <Edit3 className="h-5 w-5" />
                     Input Text
                   </span>
                   <span className="text-sm text-muted-foreground">

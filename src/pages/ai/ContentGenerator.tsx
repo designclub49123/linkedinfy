@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Sparkles, FileText, Loader2, Zap, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Sparkles, FileText, Loader2, Zap, CheckCircle, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TEMPLATES = [

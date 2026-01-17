@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Languages, SwapHorizontal, Loader2, Copy, CheckCircle, Globe2, Zap } from 'lucide-react';
+import { ArrowLeft, Languages, ArrowLeftRight, Loader2, Copy, CheckCircle, Globe2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 const LANGUAGES = [
@@ -127,7 +127,7 @@ export default function TranslationPage() {
                     onClick={handleSwap}
                     title="Swap languages"
                   >
-                    <SwapHorizontal className="h-4 w-4" />
+                    <ArrowLeftRight className="h-4 w-4" />
                   </Button>
                   <Select value={toLang} onValueChange={setToLang}>
                     <SelectTrigger className="w-32 h-8 text-xs">

@@ -61,7 +61,7 @@ export async function exportToPDF(
     const blob = await exportWithTimeout(
       new Promise<Blob>((resolve, reject) => {
         try {
-          editor.saveAsBlob('Pdf').then(resolve).catch(reject);
+          editor.saveAsBlob('pdf' as any).then(resolve).catch(reject);
         } catch (error) {
           reject(error);
         }
@@ -174,7 +174,7 @@ export async function exportToHTML(
     const blob = await exportWithTimeout(
       new Promise<Blob>((resolve, reject) => {
         try {
-          editor.saveAsBlob('Html').then(resolve).catch(reject);
+          editor.saveAsBlob('html' as any).then(resolve).catch(reject);
         } catch (error) {
           reject(error);
         }
