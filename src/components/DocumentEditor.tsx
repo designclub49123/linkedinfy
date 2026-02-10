@@ -39,95 +39,92 @@ const DocumentEditor: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const contentLoadedRef = useRef(false);
 
   // Load document from Supabase on mount
   useEffect(() => {
     if (documentId && user) {
+      contentLoadedRef.current = false;
       loadDocument(documentId);
     }
-  }, [documentId, user]);
+  }, [documentId, user, loadDocument]);
 
   // Apply theme
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-
-    if (editorRef.current?.documentEditor) {
-      const editorContainer = document.querySelector('#documentEditor');
-      if (editorContainer) {
-        editorContainer.classList.remove('e-dark-theme', 'e-light-theme');
-        const existingStyle = document.getElementById('editor-dark-theme');
-
-        if (theme === 'dark') {
-          editorContainer.classList.add('e-dark-theme');
-          if (!existingStyle) {
-            const style = document.createElement('style');
-            style.id = 'editor-dark-theme';
-            style.textContent = `
-              #documentEditor .e-de-cnt-pg { background-color: #1a1a1a !important; }
-              #documentEditor .e-de-document-text { color: #ffffff !important; }
-              #documentEditor .e-de-cnt-pg-content { background-color: #1a1a1a !important; }
-            `;
-            document.head.appendChild(style);
-          }
-        } else {
-          editorContainer.classList.add('e-light-theme');
-          existingStyle?.remove();
-        }
-      }
-    }
   }, [theme]);
 
   // Load document content into editor when ready
   useEffect(() => {
-    if (currentDocument && editorRef.current?.documentEditor && isReady) {
+    if (currentDocument && editorRef.current?.documentEditor && isReady && !contentLoadedRef.current) {
       const editor = editorRef.current.documentEditor;
       if (currentDocument.content) {
         try {
+          // Try to open as SFDT first (if previously saved as SFDT)
+          try {
+            const parsed = JSON.parse(currentDocument.content);
+            if (parsed.sections) {
+              editor.open(currentDocument.content);
+              contentLoadedRef.current = true;
+              setDocumentName(currentDocument.title);
+              editor.focusIn();
+              return;
+            }
+          } catch {
+            // Not JSON/SFDT, treat as plain text
+          }
+          
+          // Fall back to inserting as plain text
           editor.selection.selectAll();
           editor.editor.delete();
           const plainText = currentDocument.content.replace(/<[^>]*>/g, '');
-          editor.editor.insertText(plainText);
+          if (plainText.trim()) {
+            editor.editor.insertText(plainText);
+          }
+          contentLoadedRef.current = true;
           setDocumentName(currentDocument.title);
           editor.focusIn();
         } catch (error) {
           console.error('Failed to load content:', error);
         }
+      } else {
+        contentLoadedRef.current = true;
+        setDocumentName(currentDocument.title);
       }
     }
   }, [currentDocument?.id, isReady]);
 
-  const handleContentChange = useCallback(() => {
-    if (!editorRef.current?.documentEditor) return;
+  // Extract content from editor
+  const getEditorContent = useCallback(() => {
+    if (!editorRef.current?.documentEditor) return { text: '', sfdt: '' };
     const editor = editorRef.current.documentEditor;
-    setTotalPages(editor.pageCount || 1);
-    setIsSaved(false);
-    setIsTyping(true);
-
     try {
-      const content = editor.serialize();
-      const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      setWordCount(text ? text.split(' ').length : 0);
-      setCharacterCount(text.length);
+      const sfdt = editor.serialize();
+      // Extract plain text for word/char counts
+      const text = sfdt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return { text, sfdt };
     } catch {
-      // Silent fail
+      return { text: '', sfdt: '' };
     }
-
-    updateActiveFormats();
-
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      handleAutoSave();
-      setIsTyping(false);
-    }, 3000);
   }, []);
 
-  const handleAutoSave = useCallback(async () => {
-    if (!editorRef.current?.documentEditor || isAutoSaving) return;
+  // Auto-save to Supabase
+  const performAutoSave = useCallback(async () => {
+    if (!editorRef.current?.documentEditor || !currentDocument || isAutoSaving) return;
+    
     setIsAutoSaving(true);
     try {
-      const editor = editorRef.current.documentEditor;
-      const content = editor.serialize();
-      updateDocument({ content });
+      const { text, sfdt } = getEditorContent();
+      const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+      const chars = text.length;
+
+      updateDocument({
+        content: sfdt,
+        word_count: words,
+        character_count: chars,
+      });
+      
       await saveDocument();
       setLastSaved(new Date());
       setIsSaved(true);
@@ -136,7 +133,39 @@ const DocumentEditor: React.FC = () => {
     } finally {
       setIsAutoSaving(false);
     }
-  }, [isAutoSaving, updateDocument, saveDocument]);
+  }, [currentDocument, isAutoSaving, getEditorContent, updateDocument, saveDocument]);
+
+  const handleContentChange = useCallback(() => {
+    if (!editorRef.current?.documentEditor) return;
+    const editor = editorRef.current.documentEditor;
+    setTotalPages(editor.pageCount || 1);
+    setIsSaved(false);
+    setIsTyping(true);
+
+    // Update word/char counts
+    try {
+      const { text } = getEditorContent();
+      const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+      setWordCount(words);
+      setCharacterCount(text.length);
+    } catch {
+      // Silent fail
+    }
+
+    updateActiveFormats();
+
+    // Debounce typing indicator
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 1500);
+
+    // Debounce auto-save (5 seconds after last change)
+    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 5000);
+  }, [getEditorContent, performAutoSave]);
 
   const updateActiveFormats = useCallback(() => {
     if (!editorRef.current?.documentEditor) return;
@@ -155,12 +184,18 @@ const DocumentEditor: React.FC = () => {
 
   const handleSave = useCallback(async () => {
     if (!editorRef.current?.documentEditor) return;
-    const content = editorRef.current.documentEditor.serialize();
-    updateDocument({ content });
+    const { text, sfdt } = getEditorContent();
+    const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    
+    updateDocument({
+      content: sfdt,
+      word_count: words,
+      character_count: text.length,
+    });
     await saveDocument();
     setIsSaved(true);
     setLastSaved(new Date());
-  }, [updateDocument, saveDocument]);
+  }, [getEditorContent, updateDocument, saveDocument]);
 
   const handleExportDocx = useCallback(() => {
     if (editorRef.current?.documentEditor) {
@@ -168,7 +203,7 @@ const DocumentEditor: React.FC = () => {
     }
   }, [documentName]);
 
-  // Toolbar actions (keeping existing switch cases exactly as they were)
+  // Toolbar actions
   const handleToolbarAction = useCallback((action: string, value?: string) => {
     if (!editorRef.current?.documentEditor) {
       toast.error('Please wait for the editor to load');
@@ -378,6 +413,27 @@ const DocumentEditor: React.FC = () => {
     };
     window.addEventListener('applyToDocument', handler);
     return () => window.removeEventListener('applyToDocument', handler);
+  }, []);
+
+  // Save before leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isSaved) {
+        e.preventDefault();
+        e.returnValue = '';
+        performAutoSave();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isSaved, performAutoSave]);
+
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+    };
   }, []);
 
   if (isMobile) return <MobileAIChat />;
