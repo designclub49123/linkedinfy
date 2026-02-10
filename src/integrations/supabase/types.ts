@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string
+          id: string
+          inquiry_type: string | null
+          message: string
+          name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          inquiry_type?: string | null
+          message: string
+          name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          inquiry_type?: string | null
+          message?: string
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       document_versions: {
         Row: {
           content: string | null
@@ -140,6 +176,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      internship_applications: {
+        Row: {
+          additional_skills: string | null
+          application_status: string | null
+          availability: string
+          available_start_date: string | null
+          challenging_project: string | null
+          created_at: string | null
+          current_company: string | null
+          current_role: string | null
+          education_level: string
+          email: string
+          experience_level: string
+          first_name: string
+          graduation_year: string | null
+          id: string
+          last_name: string
+          linkedin: string | null
+          location: string | null
+          phone: string
+          portfolio: string | null
+          position: string
+          resume_url: string | null
+          strengths: string | null
+          technical_skills: string[] | null
+          university: string
+          updated_at: string | null
+          why_work_here: string
+          work_authorization: string
+        }
+        Insert: {
+          additional_skills?: string | null
+          application_status?: string | null
+          availability: string
+          available_start_date?: string | null
+          challenging_project?: string | null
+          created_at?: string | null
+          current_company?: string | null
+          current_role?: string | null
+          education_level: string
+          email: string
+          experience_level: string
+          first_name: string
+          graduation_year?: string | null
+          id?: string
+          last_name: string
+          linkedin?: string | null
+          location?: string | null
+          phone: string
+          portfolio?: string | null
+          position: string
+          resume_url?: string | null
+          strengths?: string | null
+          technical_skills?: string[] | null
+          university: string
+          updated_at?: string | null
+          why_work_here: string
+          work_authorization: string
+        }
+        Update: {
+          additional_skills?: string | null
+          application_status?: string | null
+          availability?: string
+          available_start_date?: string | null
+          challenging_project?: string | null
+          created_at?: string | null
+          current_company?: string | null
+          current_role?: string | null
+          education_level?: string
+          email?: string
+          experience_level?: string
+          first_name?: string
+          graduation_year?: string | null
+          id?: string
+          last_name?: string
+          linkedin?: string | null
+          location?: string | null
+          phone?: string
+          portfolio?: string | null
+          position?: string
+          resume_url?: string | null
+          strengths?: string | null
+          technical_skills?: string[] | null
+          university?: string
+          updated_at?: string | null
+          why_work_here?: string
+          work_authorization?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -408,6 +534,51 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_submissions: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string
+          features: string[] | null
+          first_name: string
+          id: string
+          job_title: string | null
+          last_name: string
+          message: string | null
+          phone: string | null
+          updated_at: string | null
+          use_case: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email: string
+          features?: string[] | null
+          first_name: string
+          id?: string
+          job_title?: string | null
+          last_name: string
+          message?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          use_case?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          features?: string[] | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_name?: string
+          message?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          use_case?: string | null
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string
@@ -440,7 +611,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      internship_stats: {
+        Row: {
+          accepted_applications: number | null
+          last_30_days: number | null
+          last_7_days: number | null
+          pending_applications: number | null
+          reviewed_applications: number | null
+          total_applications: number | null
+          unique_applicants: number | null
+        }
+        Relationships: []
+      }
+      recent_internship_applications: {
+        Row: {
+          application_status: string | null
+          created_at: string | null
+          education_level: string | null
+          email: string | null
+          experience_level: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          phone: string | null
+          position: string | null
+          university: string | null
+        }
+        Relationships: []
+      }
+      waitlist_stats: {
+        Row: {
+          last_30_days: number | null
+          last_7_days: number | null
+          total_submissions: number | null
+          unique_emails: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

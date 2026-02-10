@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/state/useUserStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useDocStore } from '@/state/useDocStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,8 @@ import {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, theme, colorTheme, toggleTheme, setColorTheme } = useUserStore();
+  const { theme, colorTheme, toggleTheme, setColorTheme } = useUserStore();
+  const { user } = useAuth();
   const { currentDocument, documents } = useDocStore();
   
   const [activeTab, setActiveTab] = useState('profile');
@@ -55,9 +57,9 @@ export default function Settings() {
   
   // Profile Settings
   const [profileData, setProfileData] = useState({
-    name: user?.name || 'John Doe',
-    email: user?.email || 'john.doe@example.com',
-    bio: (user as any)?.bio || '',
+    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
+    email: user?.email || '',
+    bio: '',
   });
   
   // Notification Settings
