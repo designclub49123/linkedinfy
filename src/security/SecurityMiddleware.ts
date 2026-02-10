@@ -126,15 +126,20 @@ class SecurityMiddleware {
       this.updateSessionActivity(context.sessionId);
     }
 
-    // Apply security rules
-    for (const rule of this.rules.sort((a, b) => a.priority - b.priority)) {
+    // Apply security rules - collect log promises, don't await in loop
+    const sortedRules = this.rules.sort((a, b) => a.priority - b.priority);
+    const logPromises: Promise<void>[] = [];
+
+    for (const rule of sortedRules) {
       if (!rule.enabled) continue;
 
       try {
         if (rule.condition(context)) {
-          await this.logSecurityEvent(rule, context);
+          logPromises.push(this.logSecurityEvent(rule, context));
           
           if (rule.action === 'deny') {
+            // Fire-and-forget log promises
+            Promise.all(logPromises).catch(console.error);
             return {
               allowed: false,
               context,
@@ -142,6 +147,7 @@ class SecurityMiddleware {
               statusCode: 403
             };
           } else if (rule.action === 'challenge') {
+            Promise.all(logPromises).catch(console.error);
             return {
               allowed: false,
               context,
@@ -154,6 +160,9 @@ class SecurityMiddleware {
         console.error(`Security rule ${rule.id} failed:`, error);
       }
     }
+
+    // Flush any pending log promises
+    Promise.all(logPromises).catch(console.error);
 
     return {
       allowed: true,
@@ -329,21 +338,21 @@ class SecurityMiddleware {
           permissions: userContext.permissions,
           sessionId
         };
-      } else {
-        await this.securityService.logEvent({
-          type: 'login',
-          userId: '',
-          ip: credentials.ip,
-          userAgent: credentials.userAgent,
-          details: { email: credentials.email, reason: 'invalid_credentials' },
-          severity: 'medium'
-        });
-
-        return {
-          success: false,
-          error: 'Invalid credentials'
-        };
       }
+      
+      await this.securityService.logEvent({
+        type: 'login',
+        userId: '',
+        ip: credentials.ip,
+        userAgent: credentials.userAgent,
+        details: { email: credentials.email, reason: 'invalid_credentials' },
+        severity: 'medium'
+      });
+
+      return {
+        success: false,
+        error: 'Invalid credentials'
+      };
     } catch (error) {
       console.error('Authentication error:', error);
       return {

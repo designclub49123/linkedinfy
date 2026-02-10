@@ -7,8 +7,9 @@ import { toast } from '@/components/ui/use-toast';
 import { exportDocumentToPdf } from '@/utils/exportPdf';
 import { prepareHTMLForEditorInsertion } from '@/utils/contentFormatter';
 import { TypingIndicator } from './TypingIndicator';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import DOMPurify from 'dompurify';
 
 // Helper to extract placeholders like [Your Name], [Date], [start date]
 function extractPlaceholders(html: string) {
@@ -121,7 +122,7 @@ export function AIChatBubble({ message, onRegenerate, isGenerating }: AIChatBubb
                         <div className="max-h-40 overflow-auto rounded border border-border p-3 bg-background text-sm">
                           <div 
                             className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-h1:text-lg prose-h2:text-base prose-h3:text-sm prose-li:my-1 prose-table:my-2 prose-td:px-2 prose-td:py-1"
-                            dangerouslySetInnerHTML={{ __html: filledContent ?? message.applyContent }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(filledContent ?? message.applyContent ?? '') }}
                           />
                         </div>
 
@@ -186,7 +187,7 @@ export function AIChatBubble({ message, onRegenerate, isGenerating }: AIChatBubb
                                   wrapper.style.boxSizing = 'border-box';
                                   wrapper.style.padding = '20mm';
                                   wrapper.style.background = '#ffffff';
-                                  wrapper.innerHTML = `<div class="prose prose-sm max-w-none">${prepared}</div>`;
+                                  wrapper.innerHTML = DOMPurify.sanitize(`<div class="prose prose-sm max-w-none">${prepared}</div>`);
                                   document.body.appendChild(wrapper);
                                   await exportDocumentToPdf(wrapper, downloadFilename || `ai-preview-${Date.now()}.pdf`);
                                   document.body.removeChild(wrapper);

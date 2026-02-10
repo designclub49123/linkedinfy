@@ -45,19 +45,22 @@ export function useAutosave({
   // Save function
   const save = useCallback(async () => {
     if (!documentId || !enabled) return;
-    if (content === lastSavedContent.current) return;
+    
+    // Capture the current content at save time to avoid race conditions
+    const contentToSave = content;
+    if (contentToSave === lastSavedContent.current) return;
 
     setState(prev => ({ ...prev, isSaving: true, error: null }));
     pendingSaveRef.current = false;
 
     try {
-      const wordCount = calculateWordCount(content);
-      const characterCount = content.length;
+      const wordCount = calculateWordCount(contentToSave);
+      const characterCount = contentToSave.length;
 
       const { error } = await supabase
         .from('documents')
         .update({
-          content,
+          content: contentToSave,
           content_html: contentHtml,
           title,
           word_count: wordCount,
@@ -68,7 +71,7 @@ export function useAutosave({
 
       if (error) throw error;
 
-      lastSavedContent.current = content;
+      lastSavedContent.current = contentToSave;
       setState(prev => ({
         ...prev,
         isSaving: false,
