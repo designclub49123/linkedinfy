@@ -10,6 +10,7 @@ import { useDocStore, type Document } from '@/state/useDocStore';
 import { LEFT_SIDEBAR_TABS } from '@/constants';
 import { useEditorStore } from '@/state/useEditorStore';
 import { useUserStore } from '@/state/useUserStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useSidebarStore } from '@/state/useSidebarStore';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -111,7 +112,16 @@ export function SidebarLeft() {
   const { leftCollapsed, setLeftCollapsed } = useSidebarStore();
   const [activeTab, setActiveTab] = useState<string>('templates');
   const [searchQuery, setSearchQuery] = useState('');
-  const { documents, currentDocument, createDocumentWithContent, setCurrentDocument, updateDocument, deleteDocument } = useDocStore();
+  const { documents, currentDocument, setCurrentDocument, updateDocument, deleteDocument, createNewDocument } = useDocStore();
+  const { user } = useAuth();
+  const createDocumentWithContent = useCallback((title?: string, content?: string, templateId?: string) => {
+    if (!user) return;
+    createNewDocument(user.id).then(doc => {
+      if (doc && (title || content)) {
+        updateDocument({ title: title || doc.title, content: content || doc.content, template_id: templateId });
+      }
+    });
+  }, [user, createNewDocument, updateDocument]);
   const { editor } = useEditorStore();
   const { theme, colorTheme } = useUserStore();
 

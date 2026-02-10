@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useDocStore } from '@/state/useDocStore';
 import { useUserStore } from '@/state/useUserStore';
 import { useEditorStore } from '@/state/useEditorStore';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -30,25 +30,12 @@ import {
   Presentation,
   AlertTriangle,
   RefreshCw,
-  Shield,
   Zap,
-  Globe,
   HelpCircle,
-  Search,
-  Menu,
-  X,
-  Crown,
-  Star,
-  TrendingUp,
-  Monitor,
-  Users,
-  CreditCard,
   History,
   FileDown,
 } from 'lucide-react';
-import { APP_NAME } from '@/constants';
 import { Palette } from 'lucide-react';
-import ThemeSelector from '@/components/ThemeSelector';
 import { AIToolsDropdown } from '@/components/AIToolsDropdown';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import VersionHistory from '@/components/VersionHistory';
@@ -58,14 +45,13 @@ import { exportToDOCX, exportToTXT } from '@/utils/exportDocument';
 import { cn } from '@/lib/utils';
 import logo from '/logo.png';
 import logo1 from '/logo1.png';
-import SecurityService from '@/security/SecurityService';
-import SecurityMiddleware from '@/security/SecurityMiddleware';
 
 export function Topbar() {
   const navigate = useNavigate();
   const { id: documentId } = useParams();
-  const { currentDocument, saveStatus, updateDocumentTitle, saveDocument, autoSave, createNewDocument } = useDocStore();
-  const { user, theme, colorTheme, toggleTheme, setColorTheme, logout } = useUserStore();
+  const { currentDocument, saveStatus, updateDocumentTitle, saveDocument, autoSave } = useDocStore();
+  const { theme, colorTheme, toggleTheme, setColorTheme } = useUserStore();
+  const { user, signOut } = useAuth();
   const { contentRef, editor } = useEditorStore();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(currentDocument?.title || 'Untitled Document');
@@ -75,26 +61,10 @@ export function Topbar() {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showAdvancedExport, setShowAdvancedExport] = useState(false);
 
-  // Initialize security services
-  useEffect(() => {
-    const securityMiddleware = SecurityMiddleware.getInstance();
-    const securityService = SecurityService.getInstance();
-    
-    // Initialize security monitoring
-    // Note: applySecurityHeaders is not a method, remove this call
-    
-    // Track user session
-    if (user) {
-      // Note: createSession is not a method on SecurityService, remove this call
-      console.log('Security services initialized for user:', user.id);
-    }
-  }, [user]);
-
   // Handle save error notifications
   useEffect(() => {
     const handleSaveError = (event: CustomEvent) => {
-      const { message } = event.detail;
-      toast.error(`Save failed: ${message}`);
+      toast.error(`Save failed: ${event.detail?.message}`);
       setShowSaveError(true);
     };
 
@@ -121,7 +91,7 @@ export function Topbar() {
       await saveDocument();
       setShowSaveError(false);
       toast.success('Document saved successfully');
-    } catch (error) {
+    } catch {
       toast.error('Retry failed. Please check your connection.');
     } finally {
       setIsRetrying(false);
@@ -137,14 +107,11 @@ export function Topbar() {
     setIsEditingTitle(false);
     if (titleValue.trim()) {
       updateDocumentTitle(titleValue.trim());
-      setTitleValue(titleValue.trim()); // Update the displayed value immediately
     }
   };
 
   const handleTitleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleTitleBlur();
-    }
+    if (e.key === 'Enter') handleTitleBlur();
     if (e.key === 'Escape') {
       setIsEditingTitle(false);
       setTitleValue(currentDocument?.title || 'Untitled Document');
@@ -152,35 +119,21 @@ export function Topbar() {
   };
 
   const handleExport = async (format: 'docx' | 'txt') => {
-    // Create a new document if none exists
     if (!currentDocument) {
-      createNewDocument();
-      // Wait a moment for the document to be created
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    const updatedDoc = useDocStore.getState().currentDocument;
-    if (!updatedDoc) {
-      toast.error('Failed to create document for export');
+      toast.error('No document to export');
       return;
     }
-
     setIsExporting(true);
     try {
-      switch (format) {
-        case 'docx':
-          await exportToDOCX(updatedDoc, contentRef);
-          toast.success('Word document exported successfully');
-          break;
-        case 'txt':
-          await exportToTXT(updatedDoc, contentRef);
-          toast.success('Text file exported successfully');
-          break;
+      if (format === 'docx') {
+        await exportToDOCX(currentDocument, contentRef);
+        toast.success('Word document exported');
+      } else {
+        await exportToTXT(currentDocument, contentRef);
+        toast.success('Text file exported');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Export failed';
-      toast.error(message);
-      console.error('Export error:', error);
+      toast.error(error instanceof Error ? error.message : 'Export failed');
     } finally {
       setIsExporting(false);
     }
@@ -191,400 +144,214 @@ export function Topbar() {
       case 'saving':
         return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
       case 'saved':
-        return <Check className="h-4 w-4 text-success" />;
+        return <Check className="h-4 w-4 text-green-600 dark:text-green-400" />;
       default:
-        if (showSaveError) {
-          return <AlertTriangle className="h-4 w-4 text-destructive" />;
-        }
-        return <Cloud className="h-4 w-4 text-muted-foreground" />;
+        return showSaveError
+          ? <AlertTriangle className="h-4 w-4 text-destructive" />
+          : <Cloud className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getSaveStatusText = () => {
     switch (saveStatus) {
-      case 'saving':
-        return 'Saving...';
-      case 'saved':
-        return 'Saved';
-      default:
-        if (showSaveError) {
-          return 'Save failed';
-        }
-        return 'Unsaved changes';
+      case 'saving': return 'Saving...';
+      case 'saved': return 'Saved';
+      default: return showSaveError ? 'Save failed' : 'Unsaved';
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-6 gap-4 relative z-50 transition-colors duration-200 bg-background">
-      {/* Logo & Document Section */}
-      <div className="flex items-center gap-4 min-w-0 flex-1 relative">
-        {/* Logo Only */}
-        <div className="flex items-center shrink-0">
-          <div className="h-12 rounded-lg overflow-hidden">
-            <img 
-              src={theme === 'dark' ? logo : logo1} 
-              alt="PaperMorph Logo" 
-              className="h-full w-full object-cover"
-            />
-          </div>
+    <header className="h-14 border-b border-border flex items-center justify-between px-4 gap-3 relative z-50 bg-background">
+      {/* Logo & Document */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="h-10 shrink-0 rounded-lg overflow-hidden">
+          <img
+            src={theme === 'dark' ? logo : logo1}
+            alt="PaperMorph"
+            className="h-full w-full object-cover"
+          />
         </div>
 
-        <div className="h-6 w-px hidden lg:block bg-border" />
+        <div className="h-5 w-px bg-border hidden lg:block" />
 
-        {/* Document Name & Status */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Document Name - Inline Editable */}
-            {isEditingTitle ? (
-              <input
-                type="text"
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
-                onBlur={handleTitleBlur}
-                onKeyDown={handleTitleKeyDown}
-                autoFocus
-                className="bg-transparent border-none outline-none font-semibold text-sm w-full min-w-0 text-foreground"
-                placeholder="Enter document name..."
-              />
-            ) : (
-              <span
-                onClick={handleTitleClick}
-                className="font-semibold text-sm cursor-pointer truncate text-foreground"
-                title="Click to edit document name"
-              >
-                {titleValue || 'Untitled Document'}
-              </span>
-            )}
-          </div>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {isEditingTitle ? (
+            <input
+              type="text"
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={handleTitleBlur}
+              onKeyDown={handleTitleKeyDown}
+              autoFocus
+              className="bg-transparent border-none outline-none font-semibold text-sm w-full min-w-0 text-foreground"
+              placeholder="Document name..."
+            />
+          ) : (
+            <span
+              onClick={handleTitleClick}
+              className="font-semibold text-sm cursor-pointer truncate text-foreground hover:text-primary transition-colors"
+              title="Click to rename"
+            >
+              {titleValue || 'Untitled Document'}
+            </span>
+          )}
 
-          {/* Save Status */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 flex-shrink-0">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded text-xs text-muted-foreground shrink-0">
             {getSaveStatusIcon()}
             <span className="hidden sm:block">{getSaveStatusText()}</span>
             {showSaveError && (
-              <button
-                onClick={handleRetrySave}
-                disabled={isRetrying}
-                title="Retry save"
-                className="hover:bg-destructive/10 hover:text-destructive rounded p-0.5"
-              >
-                <RefreshCw className={`h-2 w-2 ${isRetrying ? 'animate-spin' : ''}`} />
+              <button onClick={handleRetrySave} disabled={isRetrying} className="hover:text-destructive p-0.5">
+                <RefreshCw className={cn("h-3 w-3", isRetrying && "animate-spin")} />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2 relative">
-        {/* Save Button */}
-        <Button 
-          variant={saveStatus === 'saved' ? 'outline' : 'default'} 
-          size="sm" 
+      {/* Actions */}
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant={saveStatus === 'saved' ? 'outline' : 'default'}
+          size="sm"
           onClick={() => saveDocument()}
           disabled={saveStatus === 'saving'}
-          className="gap-2 shadow-sm hover:shadow-md transition-all duration-200 h-8 px-3"
+          className="gap-1.5 h-8 px-3"
         >
-          {saveStatus === 'saving' ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Save className="h-3 w-3" />
-          )}
-          <span className="hidden sm:block text-sm font-medium">
-            {saveStatus === 'saving' ? 'Saving...' : 'Save'}
-          </span>
+          {saveStatus === 'saving' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+          <span className="hidden sm:block text-sm">Save</span>
         </Button>
 
         <div className="h-4 w-px bg-border" />
 
-        {/* Export & Tools */}
-        <div className="flex items-center gap-1">
-          {/* Version History Button */}
-          {documentId && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2.5 gap-2"
-                  onClick={() => setShowVersionHistory(true)}
-                >
-                  <History className="h-3 w-3" />
-                  <span className="hidden lg:block text-sm">History</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>View version history</TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Export Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2 h-8 px-3 transition-colors hover:bg-accent"
-                disabled={isExporting}
-              >
-                {isExporting ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Download className="h-3 w-3" />
-                )}
-                <span className="hidden lg:block text-sm font-medium">Export</span>
-                <ChevronDown className="h-3 w-3" />
+        {/* Version History */}
+        {documentId && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setShowVersionHistory(true)}>
+                <History className="h-3.5 w-3.5" />
+                <span className="hidden lg:block text-sm ml-1">History</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5">
-                <div className="text-xs font-medium text-muted-foreground mb-1">Export Format</div>
+            </TooltipTrigger>
+            <TooltipContent>Version history</TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Export */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1 h-8 px-2" disabled={isExporting}>
+              {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              <span className="hidden lg:block text-sm">Export</span>
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem onClick={() => handleExport('docx')} className="gap-2">
+              <Presentation className="h-4 w-4 text-primary" />
+              <div>
+                <div className="font-medium text-sm">Word Document</div>
+                <div className="text-xs text-muted-foreground">Editable .docx</div>
               </div>
-              <DropdownMenuItem onClick={() => handleExport('docx')} className="gap-3">
-                <Presentation className="h-4 w-4 text-primary" />
-                <div className="flex-1">
-                  <div className="font-medium">Word Document</div>
-                  <div className="text-xs text-muted-foreground">Editable format</div>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('txt')} className="gap-3">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <div className="font-medium">Plain Text</div>
-                  <div className="text-xs text-muted-foreground">Simple format</div>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowAdvancedExport(true)} className="gap-3">
-                <FileDown className="h-4 w-4 text-primary" />
-                <div className="flex-1">
-                  <div className="font-medium">Advanced Export</div>
-                  <div className="text-xs text-muted-foreground">Headers, watermarks, more</div>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Theme Selector Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2 h-8 px-2.5 transition-colors hover:bg-accent"
-                title="Select theme"
-              >
-                <Palette className="h-3 w-3" />
-                <span className="hidden lg:block text-sm font-medium">Theme</span>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setColorTheme('orange')} className="gap-3">
-                <div className="h-4 w-4 bg-primary rounded-full" style={{ backgroundColor: 'hsl(15 90% 55%)' }} />
-                <div className="flex-1">
-                  <div className="font-medium">Orange Theme</div>
-                  <div className="text-xs text-muted-foreground">Warm and energetic</div>
-                </div>
-                {colorTheme === 'orange' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setColorTheme('blue')} className="gap-3">
-                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: 'hsl(212 100% 50%)' }} />
-                <div className="flex-1">
-                  <div className="font-medium">Blue Theme</div>
-                  <div className="text-xs text-muted-foreground">Cool and professional</div>
-                </div>
-                {colorTheme === 'blue' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setColorTheme('green')} className="gap-3">
-                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
-                <div className="flex-1">
-                  <div className="font-medium">Green Theme</div>
-                  <div className="text-xs text-muted-foreground">Fresh and natural</div>
-                </div>
-                {colorTheme === 'green' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setColorTheme('red')} className="gap-3">
-                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: 'hsl(0 72% 51%)' }} />
-                <div className="flex-1">
-                  <div className="font-medium">Red Theme</div>
-                  <div className="text-xs text-muted-foreground">Bold and passionate</div>
-                </div>
-                {colorTheme === 'red' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toggleTheme()} className="gap-3">
-                <Moon className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <div className="font-medium">Dark Theme</div>
-                  <div className="text-xs text-muted-foreground">Classic dark mode</div>
-                </div>
-                {theme === 'dark' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toggleTheme()} className="gap-3">
-                <Sun className="h-4 w-4 text-primary" />
-                <div className="flex-1">
-                  <div className="font-medium">Light Theme</div>
-                  <div className="text-xs text-muted-foreground">Clean and bright</div>
-                </div>
-                {theme === 'light' && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* AI Tools Dropdown */}
-          <AIToolsDropdown />
-
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => toggleTheme()}
-            className={`h-8 w-8 transition-colors ${
-              theme === 'dark' 
-                ? 'hover:bg-gray-800 text-white' 
-                : 'hover:bg-gray-100 text-gray-900'
-            }`}
-            title="Toggle theme"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-3 w-3" />
-            ) : (
-              <Moon className="h-3 w-3" />
-            )}
-          </Button>
-
-          {/* Notifications Dropdown */}
-          <NotificationsDropdown />
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`gap-2 h-8 px-2.5 transition-colors ${
-                  theme === 'dark' 
-                    ? 'hover:bg-gray-800 text-white' 
-                    : 'hover:bg-gray-100 text-gray-900'
-                }`}
-              >
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <div className="hidden lg:block text-left">
-                  <div className="text-xs font-medium">{user?.name || 'User'}</div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Crown className="h-2.5 w-2.5 text-primary" />
-                    Premium Plan
-                  </div>
-                </div>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <div className="px-2 py-3 border-b border-border">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{user?.name || 'User'}</div>
-                    <div className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</div>
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      <Crown className="h-2.5 w-2.5 mr-1 text-primary" />
-                      Premium
-                    </Badge>
-                  </div>
-                </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('txt')} className="gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="font-medium text-sm">Plain Text</div>
+                <div className="text-xs text-muted-foreground">.txt format</div>
               </div>
-              
-              <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-3">
-                <User className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Profile</div>
-                  <div className="text-xs text-muted-foreground">View & edit profile</div>
-                </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowAdvancedExport(true)} className="gap-2">
+              <FileDown className="h-4 w-4 text-primary" />
+              <div>
+                <div className="font-medium text-sm">Advanced Export</div>
+                <div className="text-xs text-muted-foreground">PDF, headers, watermarks</div>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Theme */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 px-2 gap-1">
+              <Palette className="h-3.5 w-3.5" />
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {([
+              { id: 'orange' as const, label: 'Orange', color: 'hsl(15 90% 55%)' },
+              { id: 'blue' as const, label: 'Blue', color: 'hsl(212 100% 50%)' },
+              { id: 'green' as const, label: 'Green', color: 'hsl(142 76% 36%)' },
+              { id: 'red' as const, label: 'Red', color: 'hsl(0 72% 51%)' },
+            ]).map((t) => (
+              <DropdownMenuItem key={t.id} onClick={() => setColorTheme(t.id)} className="gap-2">
+                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: t.color }} />
+                <span className="flex-1">{t.label}</span>
+                {colorTheme === t.id && <Check className="h-3.5 w-3.5 text-primary" />}
               </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/billing')} className="gap-3">
-                <Crown className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Billing</div>
-                  <div className="text-xs text-muted-foreground">Manage subscription</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/team')} className="gap-3">
-                <Users className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Team</div>
-                  <div className="text-xs text-muted-foreground">Manage members</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/admin/payments')} className="gap-3">
-                <CreditCard className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Payments</div>
-                  <div className="text-xs text-muted-foreground">Billing & subscriptions</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/admin')} className="gap-3">
-                <Shield className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Admin</div>
-                  <div className="text-xs text-muted-foreground">Admin panel</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/security')} className="gap-3">
-                <Shield className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Security</div>
-                  <div className="text-xs text-muted-foreground">Monitor & threats</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/settings')} className="gap-3">
-                <Settings className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Settings</div>
-                  <div className="text-xs text-muted-foreground">Preferences & account</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/analytics')} className="gap-3">
-                <TrendingUp className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Usage Analytics</div>
-                  <div className="text-xs text-muted-foreground">View your statistics</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => navigate('/help')} className="gap-3">
-                <HelpCircle className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Help & Support</div>
-                  <div className="text-xs text-muted-foreground">Get assistance</div>
-                </div>
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={() => logout()} className="gap-3 text-destructive hover:bg-destructive/10">
-                <LogOut className="h-3 w-3" />
-                <div className="flex-1">
-                  <div className="font-medium text-sm">Sign Out</div>
-                  <div className="text-xs opacity-70">Logout from account</div>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={toggleTheme} className="gap-2">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <AIToolsDropdown />
+        <NotificationsDropdown />
+
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1.5 h-8 px-2 hover:bg-accent">
+              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="px-3 py-2 border-b border-border">
+              <div className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</div>
+              <div className="text-xs text-muted-foreground">{user?.email}</div>
+            </div>
+
+            <DropdownMenuItem onClick={() => navigate('/dashboard')} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')} className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/billing')} className="gap-2">
+              <Zap className="h-4 w-4" />
+              Billing
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/help')} className="gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Help & Support
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive focus:text-destructive">
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Version History Dialog */}
+      {/* Dialogs */}
       {documentId && (
         <VersionHistory
           documentId={documentId}
@@ -602,14 +369,12 @@ export function Topbar() {
         />
       )}
 
-      {/* Advanced Export Dialog */}
       <AdvancedExportDialog
         isOpen={showAdvancedExport}
         onClose={() => setShowAdvancedExport(false)}
         documentName={currentDocument?.title || 'Untitled Document'}
         content={currentDocument?.content || ''}
         onExport={(options) => {
-          // Handle other export formats
           console.log('Export with options:', options);
         }}
       />

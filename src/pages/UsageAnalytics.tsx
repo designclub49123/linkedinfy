@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUserStore } from '@/state/useUserStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useDocStore } from '@/state/useDocStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +39,7 @@ import {
 
 export default function UsageAnalytics() {
   const navigate = useNavigate();
-  const { user } = useUserStore();
+  const { user } = useAuth();
   const { documents } = useDocStore();
   
   const [activeTab, setActiveTab] = useState('overview');
@@ -352,7 +352,7 @@ export default function UsageAnalytics() {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">Document</Badge>
-                            <Badge variant="secondary">{doc.templateId || 'Custom'}</Badge>
+                            <Badge variant="secondary">{doc.template_id || 'Custom'}</Badge>
                           </div>
                         </div>
                       ))}

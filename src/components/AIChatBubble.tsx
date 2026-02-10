@@ -8,7 +8,7 @@ import { exportDocumentToPdf } from '@/utils/exportPdf';
 import { prepareHTMLForEditorInsertion } from '@/utils/contentFormatter';
 import { TypingIndicator } from './TypingIndicator';
 import { useState } from 'react';
-import { useUserStore } from '@/state/useUserStore';
+import { useAuth } from '@/hooks/useAuth';
 
 // Helper to extract placeholders like [Your Name], [Date], [start date]
 function extractPlaceholders(html: string) {
@@ -42,7 +42,7 @@ export function AIChatBubble({ message, onRegenerate, isGenerating }: AIChatBubb
   const [showFillDetails, setShowFillDetails] = useState(false);
   const [placeholders, setPlaceholders] = useState<Record<string,string>>({});
   const [filledContent, setFilledContent] = useState<string | null>(null);
-  const user = useUserStore((s) => s.user);
+  const { user } = useAuth();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -93,7 +93,7 @@ export function AIChatBubble({ message, onRegenerate, isGenerating }: AIChatBubb
                       const initial: Record<string,string> = {};
                       tokens.forEach(t => {
                         // Prefill common fields from user profile when available
-                        if (/your name/i.test(t) && user?.name) initial[t] = user.name;
+                        if (/your name/i.test(t) && user?.user_metadata?.full_name) initial[t] = user.user_metadata.full_name;
                         else if (/email|contact/i.test(t) && user?.email) initial[t] = user.email;
                         else if (/date/i.test(t)) initial[t] = new Date().toLocaleDateString();
                         else initial[t] = '';
