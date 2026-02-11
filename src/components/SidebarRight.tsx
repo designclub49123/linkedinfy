@@ -253,7 +253,7 @@ export function SidebarRight() {
       toast.error('No assistant response found');
       return;
     }
-    const ev = new CustomEvent('applyContent', { detail: { content: last.content } });
+    const ev = new CustomEvent('applyToDocument', { detail: { content: last.content } });
     window.dispatchEvent(ev);
     toast.success('Applied last AI content');
   };
@@ -496,8 +496,7 @@ export function SidebarRight() {
   };
 
   return (
-    <div className={cn('flex flex-col border-l transition-all duration-200 h-full relative', rightCollapsed ? 'w-16' : 'w-80')}
-         style={{ backgroundColor: theme === 'dark' ? '#000000' : '#ffffff' }}>
+    <div className={cn('flex flex-col border-l border-border transition-all duration-200 h-full relative bg-background', rightCollapsed ? 'w-16' : 'w-80')}>
       {/* Enhanced Header with AI Usage */}
       <div className="flex flex-col border-b transition-all duration-200 backdrop-blur-xl"
            style={{ backgroundColor: theme === 'dark' ? '#000000' : '#ffffff' }}>

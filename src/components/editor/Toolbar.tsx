@@ -78,8 +78,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
   const isCompactLayout = !leftCollapsed || !rightCollapsed;
 
   return (
-    <div className={`flex flex-col backdrop-blur supports-[backdrop-filter]: transition-colors border-b shadow-sm`}
-         style={{ backgroundColor: theme === 'dark' ? '#000000' : '#ffffff' }}>
+    <div className="flex flex-col backdrop-blur supports-[backdrop-filter]: transition-colors border-b shadow-sm bg-background">
       {/* Primary Toolbar Row */}
       <div className={`flex items-center gap-1 px-4 py-2 transition-all duration-300 min-h-[44px] ${
         isCompactLayout ? 'flex-wrap gap-1 [&>*]:mb-[5px]' : 'flex-nowrap gap-1'

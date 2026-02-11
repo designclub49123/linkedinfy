@@ -1,5 +1,4 @@
 import React from 'react';
-import { useUserStore } from '@/state/useUserStore';
 import { FileText, Hash, Type, Save, Clock, Zap, Circle } from 'lucide-react';
 
 interface StatusBarProps {
@@ -25,7 +24,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   isAutoSaving,
   lastSaved
 }) => {
-  const { theme } = useUserStore();
+  
 
   const formatLastSaved = (date: Date | null) => {
     if (!date) return 'Never';
@@ -40,11 +39,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   };
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2 text-sm border-t transition-colors ${
-      theme === 'dark' 
-        ? 'bg-[#000000] border-gray-800 text-gray-300' 
-        : 'bg-[#ffffff] border-gray-200 text-gray-600'
-    }`}>
+    <div className="flex items-center justify-between px-4 py-2 text-sm border-t border-border bg-background text-muted-foreground transition-colors">
       {/* Left side - Document info and status */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
@@ -56,23 +51,23 @@ const StatusBar: React.FC<StatusBarProps> = ({
         <div className="flex items-center gap-2">
           {isAutoSaving ? (
             <>
-              <Zap className="h-4 w-4 text-blue-500 animate-pulse" />
-              <span className="text-blue-500 font-medium">Auto-saving...</span>
+              <Zap className="h-4 w-4 text-primary animate-pulse" />
+              <span className="text-primary font-medium">Auto-saving...</span>
             </>
           ) : isTyping ? (
             <>
-              <Circle className="h-2 w-2 text-orange-500 animate-pulse" />
-              <span className="text-orange-500 font-medium">Typing...</span>
+              <Circle className="h-2 w-2 text-accent-foreground animate-pulse" />
+              <span className="text-accent-foreground font-medium">Typing...</span>
             </>
           ) : isSaved ? (
             <>
-              <Save className="h-4 w-4 text-green-500" />
-              <span className="text-green-500 font-medium">Saved</span>
+              <Save className="h-4 w-4 text-primary" />
+              <span className="text-primary font-medium">Saved</span>
             </>
           ) : (
             <>
-              <Circle className="h-2 w-2 text-yellow-500" />
-              <span className="text-yellow-500 font-medium">Unsaved</span>
+              <Circle className="h-2 w-2 text-destructive" />
+              <span className="text-destructive font-medium">Unsaved</span>
             </>
           )}
         </div>

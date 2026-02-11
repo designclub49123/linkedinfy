@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useUserStore } from '@/state/useUserStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useDocStore } from '@/state/useDocStore';
@@ -93,12 +94,21 @@ export default function Settings() {
   });
 
   const handleSaveProfile = async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.name,
+          bio: profileData.bio,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
       toast.success('Profile updated successfully');
     } catch (error) {
+      console.error('Failed to update profile:', error);
       toast.error('Failed to update profile');
     } finally {
       setIsLoading(false);
@@ -169,9 +179,9 @@ export default function Settings() {
             <p className="text-muted-foreground mt-1">Manage your account and application preferences</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/')} className="gap-2">
+            <Button variant="outline" onClick={() => navigate('/dashboard')} className="gap-2">
               <FileText className="h-4 w-4" />
-              Back to Editor
+              Back to Dashboard
             </Button>
           </div>
         </div>
@@ -419,7 +429,7 @@ export default function Settings() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-4rams">
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="font-size">Font Size</Label>
                       <Select
