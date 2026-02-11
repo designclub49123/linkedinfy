@@ -62,6 +62,26 @@ export default function Settings() {
     email: user?.email || '',
     bio: '',
   });
+
+  // Load existing profile data from Supabase on mount
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, bio')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setProfileData(prev => ({
+          ...prev,
+          name: data.full_name || prev.name,
+          bio: data.bio || '',
+        }));
+      }
+    };
+    loadProfile();
+  }, [user]);
   
   // Notification Settings
   const [notifications, setNotifications] = useState({
@@ -246,7 +266,7 @@ export default function Settings() {
                   <Label htmlFor="bio">Bio</Label>
                   <textarea
                     id="bio"
-                    className="w-full min-h-[100px] p-3 border rounded-md resize-none"
+                    className="w-full min-h-[100px] p-3 border border-border rounded-md resize-none bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Tell us about yourself..."
                     value={profileData.bio}
                     onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
@@ -591,10 +611,10 @@ export default function Settings() {
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50 dark:bg-red-950/20">
+              <div className="flex items-center justify-between p-4 border rounded-lg border-destructive/30 bg-destructive/5">
                   <div className="space-y-1">
-                    <Label className="font-medium text-red-600">Delete Account</Label>
-                    <p className="text-sm text-red-600">
+                    <Label className="font-medium text-destructive">Delete Account</Label>
+                    <p className="text-sm text-destructive">
                       Permanently delete your account and all data
                     </p>
                   </div>

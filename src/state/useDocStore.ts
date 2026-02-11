@@ -115,10 +115,36 @@ export const useDocStore = create<DocState>((set, get) => ({
     set({ saveStatus: 'saving' });
 
     try {
-      // Count words and characters from content
-      const text = (currentDocument.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      const wordCount = text ? text.split(' ').length : 0;
-      const charCount = text.length;
+      // Extract plain text from SFDT JSON content for accurate word/char counts
+      const rawContent = currentDocument.content || '';
+      let plainText = '';
+      try {
+        const parsed = JSON.parse(rawContent);
+        const extractText = (obj: any): string => {
+          if (!obj) return '';
+          let result = '';
+          if (obj.text) result += obj.text + ' ';
+          if (Array.isArray(obj.inlines)) {
+            for (const inline of obj.inlines) {
+              if (inline.text) result += inline.text + ' ';
+            }
+          }
+          if (Array.isArray(obj.blocks)) {
+            for (const block of obj.blocks) result += extractText(block) + ' ';
+          }
+          if (Array.isArray(obj.sections)) {
+            for (const section of obj.sections) result += extractText(section) + ' ';
+          }
+          if (obj.body) result += extractText(obj.body);
+          return result;
+        };
+        plainText = extractText(parsed).replace(/\s+/g, ' ').trim();
+      } catch {
+        // Fallback for non-SFDT content (plain text or HTML)
+        plainText = rawContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+      const wordCount = plainText ? plainText.split(/\s+/).filter(Boolean).length : 0;
+      const charCount = plainText.length;
 
       const { error } = await supabase
         .from('documents')
