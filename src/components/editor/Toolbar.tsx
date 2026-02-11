@@ -40,7 +40,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { useUserStore } from '@/state/useUserStore';
 import { useSidebarStore } from '@/state/useSidebarStore';
 
 interface ToolbarProps {
@@ -70,7 +69,6 @@ const headingSizes = [
 ];
 
 const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont, selectedFontSize }) => {
-  const { theme, colorTheme } = useUserStore();
   const { leftCollapsed, rightCollapsed } = useSidebarStore();
   const isActive = (format: string) => activeFormats.includes(format);
   
@@ -119,35 +117,24 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 px-3 min-w-0 justify-between transition-colors ${
+                className={`h-8 px-3 min-w-0 justify-between transition-colors border-border bg-background text-foreground hover:bg-accent ${
                   isCompactLayout ? 'max-w-24' : 'max-w-32'
-                } ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800 text-gray-300'
-                    : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }`}
               >
                 <span className="truncate text-sm">{selectedFont}</span>
                 <ChevronDown className="h-3 w-3 ml-1 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-64 max-h-96 overflow-y-auto ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
+            <DropdownMenuContent align="start" className="w-64 max-h-96 overflow-y-auto">
               {Object.entries(fontCategories).map(([category, categoryFonts]) => (
                 <div key={category}>
-                  <div className={`px-2 py-1 text-xs font-semibold ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
                     {category}
                   </div>
                   {categoryFonts.map(font => (
                     <DropdownMenuItem 
                       key={font} 
-                      onClick={() => onAction('fontFamily', font)} 
-                      className={
-                        theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-                      }
+                      onClick={() => onAction('fontFamily', font)}
                     >
                       <span style={{ fontFamily: font }} className="text-sm flex-1">{font}</span>
                       {selectedFont === font && (
@@ -167,25 +154,17 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 justify-between transition-colors ${
+                className={`h-8 justify-between transition-colors border-border bg-background text-foreground hover:bg-accent ${
                   isCompactLayout ? 'w-12 px-2' : 'w-16 px-3'
-                } ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800 text-gray-300'
-                    : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }`}
               >
                 <span className="text-sm">{selectedFontSize}</span>
                 <ChevronDown className="h-3 w-3 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-32 ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
+            <DropdownMenuContent align="start" className="w-32">
               {fontSizes.map(size => (
-                <DropdownMenuItem key={size} onClick={() => onAction('fontSize', size)} className={
-                  theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-                }>
+                <DropdownMenuItem key={size} onClick={() => onAction('fontSize', size)}>
                   <span className="text-sm">{size}</span>
                 </DropdownMenuItem>
               ))}
@@ -198,21 +177,15 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 transition-colors ${
+                className={`h-8 transition-colors border-border bg-background text-foreground hover:bg-accent ${
                   isCompactLayout ? 'px-2' : 'px-3'
-                } ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800 text-gray-300'
-                    : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }`}
               >
                 <Type className="h-4 w-4" />
                 <ChevronDown className="h-3 w-3 ml-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-40 ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
+            <DropdownMenuContent align="start" className="w-40">
               {headingSizes.map(heading => (
                 <DropdownMenuItem key={heading.value} onClick={() => onAction(heading.value)}>
                   <span className={cn(
@@ -230,9 +203,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </DropdownMenu>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Text Formatting Group */}
         <div className={`flex items-center gap-1 pr-2 transition-all duration-300 ${
@@ -317,9 +288,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </Button>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Color & Style Group */}
         <div className={`flex items-center gap-1 pr-2 transition-all duration-300 ${
@@ -330,66 +299,44 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-8 w-8 transition-colors ${
-                  theme === 'dark' 
-                    ? 'hover:bg-gray-800 text-gray-300' 
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
+                className="h-8 w-8 transition-colors hover:bg-accent"
                 title="Text Color"
               >
                 <Palette className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-48 ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#000000')} className={
-              theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-            }>
-                <div className="w-4 h-4 bg-black rounded mr-2" />
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => onAction('textColor', '#000000')}>
+                <div className="w-4 h-4 bg-foreground rounded mr-2" />
                 <span className="text-sm">Black</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#ef4444')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-red-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#ef4444')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(0 84% 60%)' }} />
                 <span className="text-sm">Red</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#3b82f6')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-blue-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#3b82f6')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(217 91% 60%)' }} />
                 <span className="text-sm">Blue</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#10b981')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-green-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#10b981')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(160 84% 39%)' }} />
                 <span className="text-sm">Green</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#f59e0b')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-amber-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#f59e0b')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(38 92% 50%)' }} />
                 <span className="text-sm">Amber</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#8b5cf6')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-violet-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#8b5cf6')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(258 90% 66%)' }} />
                 <span className="text-sm">Violet</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('textColor', '#ec4899')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-pink-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#ec4899')}>
+                <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: 'hsl(330 81% 60%)' }} />
                 <span className="text-sm">Pink</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction('textColor', '#6b7280')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
-                <div className="w-4 h-4 bg-gray-500 rounded mr-2" />
+              <DropdownMenuItem onClick={() => onAction('textColor', '#6b7280')}>
+                <div className="w-4 h-4 rounded mr-2 bg-muted-foreground" />
                 <span className="text-sm">Gray</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -406,9 +353,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </Button>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Alignment Group */}
         <div className={`flex items-center gap-1 pr-2 transition-all duration-300 ${
@@ -452,9 +397,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </Button>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Comments Group */}
         <div className={`flex items-center gap-1 transition-all duration-300 ${
@@ -495,9 +438,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </Button>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Insert Group */}
         <div className={`flex items-center gap-1 pr-2 transition-all duration-300 ${
@@ -538,52 +479,34 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
                 {isCompactLayout && <span className="text-sm">Position</span>}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-48 ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'left')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'left')}>
                 <AlignLeft className="h-4 w-4 mr-2" />
                 <span className="text-sm">Align Left</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'center')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'center')}>
                 <AlignCenter className="h-4 w-4 mr-2" />
                 <span className="text-sm">Align Center</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'right')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'right')}>
                 <AlignRight className="h-4 w-4 mr-2" />
                 <span className="text-sm">Align Right</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'inline')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'inline')}>
                 <span className="text-sm">Inline with Text</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'top')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'top')}>
                 <span className="text-sm">Top of Text</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'bottom')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'bottom')}>
                 <span className="text-sm">Bottom of Text</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'behind')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'behind')}>
                 <span className="text-sm">Behind Text</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('imagePosition', 'front')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('imagePosition', 'front')}>
                 <span className="text-sm">In Front of Text</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -595,10 +518,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
                 size="sm"
                 className={`h-8 transition-all duration-200 hover:bg-primary/10 hover:text-primary hover:scale-105 active:scale-95 ${
                   isCompactLayout ? 'px-2 gap-2' : 'w-8'
-                } ${
-                  theme === 'dark' 
-                    ? 'hover:bg-gray-800 text-gray-300' 
-                    : 'hover:bg-gray-100 text-gray-700'
                 }`}
                 title="Insert Table"
               >
@@ -606,38 +525,26 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
                 {isCompactLayout && <span className="text-sm">Table</span>}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className={`w-48 ${
-              theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'
-            }`}>
-              <DropdownMenuItem onClick={() => onAction('table')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={() => onAction('table')}>
                 <Table className="h-4 w-4 mr-2" />
                 <span className="text-sm">Insert Table</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction('insertRow')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('insertRow')}>
                 <Plus className="h-4 w-4 mr-2" />
                 <span className="text-sm">Insert Row</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('insertColumn')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('insertColumn')}>
                 <Plus className="h-4 w-4 mr-2" />
                 <span className="text-sm">Insert Column</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onAction('deleteRow')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('deleteRow')}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 <span className="text-sm">Delete Row</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onAction('deleteColumn')} className={
-                theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'
-              }>
+              <DropdownMenuItem onClick={() => onAction('deleteColumn')}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 <span className="text-sm">Delete Column</span>
               </DropdownMenuItem>
@@ -663,9 +570,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
           </Button>
         </div>
 
-        <Separator orientation="vertical" className={`h-6 mx-1 ${
-          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
-        }`} />
+        <Separator orientation="vertical" className="h-6 mx-1 bg-border" />
 
         {/* Elements Group */}
         <div className={`flex items-center gap-1 pr-2 transition-all duration-300 ${
@@ -693,12 +598,8 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, activeFormats, selectedFont
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 transition-colors ${
+                className={`h-8 transition-colors border-border bg-background text-foreground hover:bg-accent ${
                   isCompactLayout ? 'px-2' : 'px-3'
-                } ${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800 text-gray-300'
-                    : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }`}
               >
                 <div className="w-4 h-3 border border-current rounded-sm mr-2" />
