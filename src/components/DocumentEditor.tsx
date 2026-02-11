@@ -101,8 +101,34 @@ const DocumentEditor: React.FC = () => {
     const editor = editorRef.current.documentEditor;
     try {
       const sfdt = editor.serialize();
-      // Extract plain text for word/char counts
-      const text = sfdt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      // Extract plain text from SFDT JSON by parsing inline content
+      let text = '';
+      try {
+        const parsed = JSON.parse(sfdt);
+        const extractText = (obj: any): string => {
+          if (!obj) return '';
+          if (typeof obj === 'string') return obj;
+          let result = '';
+          if (obj.text) result += obj.text + ' ';
+          if (Array.isArray(obj.inlines)) {
+            for (const inline of obj.inlines) {
+              if (inline.text) result += inline.text + ' ';
+            }
+          }
+          if (Array.isArray(obj.blocks)) {
+            for (const block of obj.blocks) result += extractText(block) + ' ';
+          }
+          if (Array.isArray(obj.sections)) {
+            for (const section of obj.sections) result += extractText(section) + ' ';
+          }
+          if (obj.body) result += extractText(obj.body);
+          return result;
+        };
+        text = extractText(parsed).replace(/\s+/g, ' ').trim();
+      } catch {
+        // Fallback: strip any tags if it's not valid JSON
+        text = sfdt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
       return { text, sfdt };
     } catch {
       return { text: '', sfdt: '' };
