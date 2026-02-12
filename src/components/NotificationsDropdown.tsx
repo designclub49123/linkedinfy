@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUserStore } from '@/state/useUserStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,140 +15,73 @@ import {
   X,
   Settings,
   Archive,
-  Trash2,
-  Star,
   AlertCircle,
   Info,
   CheckCircle,
-  TrendingUp,
-  FileText,
-  MessageSquare,
   Users,
-  Zap,
-  Crown,
-  Gift,
-  Calendar,
-  Download,
-  Upload,
-  Shield,
-  Heart,
   Award,
-  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'achievement' | 'system' | 'social';
+  type: string;
   title: string;
   message: string;
-  timestamp: Date;
-  read: boolean;
-  action?: {
-    label: string;
-    route?: string;
-    onClick?: () => void;
-  };
-  priority: 'low' | 'medium' | 'high';
+  created_at: string;
+  is_read: boolean;
+  action_url: string | null;
 }
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'achievement',
-    title: 'Milestone Reached!',
-    message: 'You\'ve created 10 documents this month. Keep up the great work!',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    read: false,
-    action: {
-      label: 'View Stats',
-      route: '/dashboard/stats',
-    },
-    priority: 'medium',
-  },
-  {
-    id: '2',
-    type: 'system',
-    title: 'New Features Available',
-    message: 'AI Writing Assistant has been enhanced with better grammar detection.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    read: false,
-    action: {
-      label: 'Try Now',
-      route: '/ai/writing-assistant',
-    },
-    priority: 'high',
-  },
-  {
-    id: '3',
-    type: 'social',
-    title: 'New Collaboration Request',
-    message: 'John Doe invited you to collaborate on "Q4 Report 2024"',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    read: true,
-    action: {
-      label: 'View Invitation',
-      route: '/collaborations/john-doe-q4-report',
-    },
-    priority: 'medium',
-  },
-  {
-    id: '4',
-    type: 'info',
-    title: 'Document Auto-saved',
-    message: 'Your document "Project Proposal" was automatically saved.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    read: true,
-    priority: 'low',
-  },
-  {
-    id: '5',
-    type: 'success',
-    title: 'Export Completed',
-    message: 'Your document has been successfully exported to PDF format.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    read: true,
-    action: {
-      label: 'Download',
-      onClick: () => toast.success('Download started!'),
-    },
-    priority: 'low',
-  },
-];
 
 export function NotificationsDropdown() {
   const navigate = useNavigate();
-  const { theme } = useUserStore();
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpening, setIsOpening] = useState(false);
 
+  // Fetch notifications from Supabase
   useEffect(() => {
-    const unread = notifications.filter(n => !n.read).length;
-    setUnreadCount(unread);
-  }, [notifications]);
+    if (!user) return;
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'achievement':
-        return <Award className="h-4 w-4 text-yellow-500" />;
+        return <Award className="h-4 w-4 text-primary" />;
       case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-primary" />;
       case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       case 'error':
-        return <X className="h-4 w-4 text-red-500" />;
+        return <X className="h-4 w-4 text-destructive" />;
       case 'system':
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-4 w-4 text-muted-foreground" />;
       case 'social':
-        return <Users className="h-4 w-4 text-purple-500" />;
+        return <Users className="h-4 w-4 text-primary" />;
       default:
-        return <Bell className="h-4 w-4 text-gray-500" />;
+        return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -161,14 +93,22 @@ export function NotificationsDropdown() {
     return `${days}d ago`;
   };
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
+      prev.map(n => n.id === id ? { ...n, is_read: true } : n)
     );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    if (!user) return;
+    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+    await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setUnreadCount(0);
     toast.success('All notifications marked as read');
   };
 
@@ -179,11 +119,8 @@ export function NotificationsDropdown() {
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    
-    if (notification.action?.route) {
-      navigate(notification.action.route);
-    } else if (notification.action?.onClick) {
-      notification.action.onClick();
+    if (notification.action_url) {
+      navigate(notification.action_url);
     }
   };
 
@@ -194,10 +131,8 @@ export function NotificationsDropdown() {
           variant="ghost" 
           size="sm" 
           className={cn(
-            'gap-2 h-8 px-2.5 transition-all duration-200 group relative',
-            theme === 'dark' 
-              ? 'hover:bg-gray-800 text-white' 
-              : 'hover:bg-gray-100 text-gray-900'
+          'gap-2 h-8 px-2.5 transition-all duration-200 group relative',
+            'hover:bg-accent text-foreground'
           )}
           title="Notifications"
         >
@@ -248,7 +183,7 @@ export function NotificationsDropdown() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/notifications/settings')}
+                onClick={() => navigate('/settings')}
                 className="h-7 w-7 p-0"
                 title="Notification settings"
               >
@@ -275,7 +210,7 @@ export function NotificationsDropdown() {
                 <DropdownMenuItem
                   className={cn(
                     'gap-3 py-3 px-3 cursor-pointer transition-colors',
-                    !notification.read && 'bg-primary/5',
+                    !notification.is_read && 'bg-primary/5',
                     'hover:bg-muted/50'
                   )}
                   onClick={() => handleNotificationClick(notification)}
@@ -292,7 +227,7 @@ export function NotificationsDropdown() {
                         <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                           {notification.message}
                         </div>
-                        {notification.action && (
+                        {notification.action_url && (
                           <Button
                             variant="link"
                             size="sm"
@@ -302,16 +237,16 @@ export function NotificationsDropdown() {
                               handleNotificationClick(notification);
                             }}
                           >
-                            {notification.action.label}
+                            View
                           </Button>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatTimestamp(notification.timestamp)}
+                          {formatTimestamp(notification.created_at)}
                         </span>
                         <div className="flex items-center gap-1">
-                          {!notification.read && (
+                          {!notification.is_read && (
                             <div className="h-1.5 w-1.5 bg-primary rounded-full" />
                           )}
                           <Button

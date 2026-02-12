@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
+import DOMPurify from 'dompurify';
 
 interface Version {
   id: string;
@@ -230,7 +231,7 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({
                     <div 
                       className="whitespace-pre-wrap bg-muted/50 rounded-lg p-4 text-sm"
                       dangerouslySetInnerHTML={{ 
-                        __html: previewContent?.replace(/\n/g, '<br/>') || '' 
+                        __html: DOMPurify.sanitize(previewContent?.replace(/\n/g, '<br/>') || '')
                       }}
                     />
                   </div>

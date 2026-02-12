@@ -83,38 +83,6 @@ const AI_TOOLS = [
     category: 'Analysis',
     items: [
       {
-        id: 'sentiment-analysis',
-        label: 'Sentiment Analysis',
-        description: 'Analyze text emotions',
-        icon: Brain,
-        route: '/ai/sentiment-analysis',
-        badge: null,
-        live: true,
-      },
-      {
-        id: 'keyword-extraction',
-        label: 'Keyword Extraction',
-        description: 'Extract important keywords',
-        icon: Target,
-        route: '/ai/keyword-extraction',
-        badge: null,
-        live: false,
-      },
-      {
-        id: 'text-analytics',
-        label: 'Text Analytics',
-        description: 'Comprehensive text analysis',
-        icon: BarChart3,
-        route: '/ai/text-analytics',
-        badge: 'Pro',
-        live: true,
-      },
-    ],
-  },
-  {
-    category: 'Content',
-    items: [
-      {
         id: 'content-generator',
         label: 'Content Generator',
         description: 'Generate new content',
@@ -124,20 +92,11 @@ const AI_TOOLS = [
         live: true,
       },
       {
-        id: 'image-generator',
-        label: 'Image Generator',
-        description: 'Create AI images',
-        icon: Image,
-        route: '/ai/image-generator',
-        badge: 'New',
-        live: false,
-      },
-      {
-        id: 'idea-generator',
-        label: 'Idea Generator',
-        description: 'Brainstorm ideas',
-        icon: Lightbulb,
-        route: '/ai/idea-generator',
+        id: 'summarization',
+        label: 'Summarization',
+        description: 'Condense long texts',
+        icon: BarChart3,
+        route: '/ai/summarization',
         badge: null,
         live: true,
       },
@@ -151,27 +110,9 @@ const AI_TOOLS = [
         label: 'Chat Assistant',
         description: 'AI conversation partner',
         icon: MessageSquare,
-        route: '/ai/chat-assistant',
+        route: '/ai/chat',
         badge: 'Live',
         live: true,
-      },
-      {
-        id: 'voice-assistant',
-        label: 'Voice Assistant',
-        description: 'Voice-powered AI',
-        icon: Mic,
-        route: '/ai/voice-assistant',
-        badge: null,
-        live: false,
-      },
-      {
-        id: 'meeting-assistant',
-        label: 'Meeting Assistant',
-        description: 'AI for meetings',
-        icon: Video,
-        route: '/ai/meeting-assistant',
-        badge: 'Coming Soon',
-        live: false,
       },
     ],
   },
@@ -198,10 +139,8 @@ export function AIToolsDropdown() {
           variant="ghost" 
           size="sm" 
           className={cn(
-            'gap-2 h-8 px-2.5 transition-all duration-200 group relative',
-            theme === 'dark' 
-              ? 'hover:bg-gray-800 text-white' 
-              : 'hover:bg-gray-100 text-gray-900'
+          'gap-2 h-8 px-2.5 transition-all duration-200 group relative',
+            'hover:bg-accent text-foreground'
           )}
         >
           <Sparkles className={cn(
@@ -263,11 +202,11 @@ export function AIToolsDropdown() {
                     >
                       <div className={cn(
                         'h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0',
-                        tool.live ? 'bg-primary/10' : 'bg-gray-100'
+                        tool.live ? 'bg-primary/10' : 'bg-muted'
                       )}>
                         <Icon className={cn(
                           'h-4 w-4',
-                          tool.live ? 'text-primary' : 'text-gray-400'
+                          tool.live ? 'text-primary' : 'text-muted-foreground'
                         )} />
                       </div>
                       <div className="flex-1">
