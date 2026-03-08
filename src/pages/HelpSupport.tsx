@@ -665,7 +665,7 @@ export default function HelpSupport() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <Award className="h-5 w-5 text-yellow-600" />
+                      <Award className="h-5 w-5 text-primary" />
                       <span className="font-medium">User of the Month</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
