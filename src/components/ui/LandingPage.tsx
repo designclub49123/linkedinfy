@@ -42,7 +42,7 @@ import {
 import logo from '/logo.png';
 import heroPreview from '/placeholder.svg';
 
-const LandingPage = () => {
+const LandingPage = React.forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
