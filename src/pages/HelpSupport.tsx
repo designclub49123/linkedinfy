@@ -409,8 +409,8 @@ export default function HelpSupport() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Users className="h-5 w-5 text-blue-600" />
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Users className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-medium">AI Writing Workshop</h3>
