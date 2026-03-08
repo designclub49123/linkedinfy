@@ -422,8 +422,8 @@ export default function HelpSupport() {
                   </div>
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Target className="h-5 w-5 text-green-600" />
+                      <div className="p-2 bg-accent rounded-lg">
+                        <Target className="h-5 w-5 text-accent-foreground" />
                       </div>
                       <div>
                         <h3 className="font-medium">Productivity Masterclass</h3>
