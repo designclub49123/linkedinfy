@@ -49,7 +49,7 @@ import logo1 from '/logo1.png';
 export function Topbar() {
   const navigate = useNavigate();
   const { id: documentId } = useParams();
-  const { currentDocument, saveStatus, updateDocumentTitle, saveDocument } = useDocStore();
+  const { currentDocument, saveStatus, updateDocumentTitle, saveDocument, autoSave } = useDocStore();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useUserStore();
   const { user, signOut } = useAuth();
   const { contentRef, editor } = useEditorStore();
@@ -72,13 +72,11 @@ export function Topbar() {
     return () => window.removeEventListener('documentSaveError', handleSaveError as EventListener);
   }, []);
 
-  // Auto-save setup - dispatch event so editor syncs content first
+  // Auto-save setup - only trigger when saveStatus changes
   useEffect(() => {
     if (saveStatus === 'unsaved') {
-      const timeout = setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('saveDocument'));
-      }, 3000);
-      return () => clearTimeout(timeout);
+      const cleanup = autoSave();
+      return cleanup || undefined;
     }
   }, [saveStatus]);
 
@@ -92,9 +90,7 @@ export function Topbar() {
   const handleRetrySave = async () => {
     setIsRetrying(true);
     try {
-      window.dispatchEvent(new CustomEvent('saveDocument'));
-      // Wait a moment for the save to process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await saveDocument();
       setShowSaveError(false);
       toast.success('Document saved successfully');
     } catch {
@@ -224,10 +220,7 @@ export function Topbar() {
         <Button
           variant={saveStatus === 'saved' ? 'outline' : 'default'}
           size="sm"
-          onClick={() => {
-            // Dispatch event so DocumentEditor syncs content before saving
-            window.dispatchEvent(new CustomEvent('saveDocument'));
-          }}
+          onClick={() => saveDocument()}
           disabled={saveStatus === 'saving'}
           className="gap-1.5 h-8 px-3"
         >

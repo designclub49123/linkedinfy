@@ -22,7 +22,7 @@ const DocumentEditor: React.FC = () => {
   const editorRef = useRef<DocumentEditorContainerComponent | null>(null);
   const { setEditor } = useEditorStore();
   const { theme } = useUserStore();
-  const { currentDocument, loadDocument, updateDocument, saveDocument, createNewDocument } = useDocStore();
+  const { currentDocument, loadDocument, updateDocument, saveDocument } = useDocStore();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [documentName, setDocumentName] = useState('Untitled Document');
@@ -42,20 +42,11 @@ const DocumentEditor: React.FC = () => {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentLoadedRef = useRef(false);
 
-  // Load document from Supabase on mount, or auto-create one if no ID
+  // Load document from Supabase on mount
   useEffect(() => {
-    if (!user) return;
-    if (documentId) {
+    if (documentId && user) {
       contentLoadedRef.current = false;
       loadDocument(documentId);
-    } else {
-      // Auto-create a document so the user's work is always saved
-      createNewDocument(user.id).then((doc) => {
-        if (doc) {
-          // Navigate to the new document URL so refreshing works
-          window.history.replaceState(null, '', `/editor/${doc.id}`);
-        }
-      });
     }
   }, [documentId, user, loadDocument]);
 
@@ -218,7 +209,7 @@ const DocumentEditor: React.FC = () => {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!editorRef.current?.documentEditor || !currentDocument) return;
+    if (!editorRef.current?.documentEditor) return;
     const { text, sfdt } = getEditorContent();
     const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
     
@@ -227,17 +218,10 @@ const DocumentEditor: React.FC = () => {
       word_count: words,
       character_count: text.length,
     });
-    
-    try {
-      await saveDocument();
-      setIsSaved(true);
-      setLastSaved(new Date());
-      toast.success('Document saved');
-    } catch (error) {
-      console.error('Save failed:', error);
-      toast.error('Failed to save document');
-    }
-  }, [currentDocument, getEditorContent, updateDocument, saveDocument]);
+    await saveDocument();
+    setIsSaved(true);
+    setLastSaved(new Date());
+  }, [getEditorContent, updateDocument, saveDocument]);
 
   const handleExportDocx = useCallback(() => {
     if (editorRef.current?.documentEditor) {
@@ -456,15 +440,6 @@ const DocumentEditor: React.FC = () => {
     window.addEventListener('applyToDocument', handler);
     return () => window.removeEventListener('applyToDocument', handler);
   }, []);
-
-  // Listen for external save requests (from Topbar, SidebarLeft, keyboard shortcuts)
-  useEffect(() => {
-    const handler = () => {
-      handleSave();
-    };
-    window.addEventListener('saveDocument', handler);
-    return () => window.removeEventListener('saveDocument', handler);
-  }, [handleSave]);
 
   // Save before leaving the page
   useEffect(() => {

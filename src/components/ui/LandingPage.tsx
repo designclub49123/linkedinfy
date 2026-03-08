@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -42,7 +42,7 @@ import {
 import logo from '/logo.png';
 import heroPreview from '/placeholder.svg';
 
-const LandingPage = () => {
+const LandingPage = React.forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -666,6 +666,8 @@ const LandingPage = () => {
       </section>
     </div>
   );
-};
+});
+
+LandingPage.displayName = 'LandingPage';
 
 export default LandingPage;

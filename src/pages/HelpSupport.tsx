@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -196,16 +198,29 @@ export default function HelpSupport() {
 
   const [formData, setFormData] = useState(contactForm);
 
+  const { user } = useAuth();
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) { toast.error('Please sign in first'); return; }
+    if (!formData.subject.trim() || !formData.message.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.from('support_tickets').insert({
+        user_id: user.id,
+        subject: formData.subject.trim(),
+        description: formData.message.trim(),
+        priority: 'medium',
+      });
+      if (error) throw error;
       toast.success('Support request submitted successfully. We\'ll get back to you soon!');
       setFormData(contactForm);
     } catch (error) {
+      console.error('Support ticket error:', error);
       toast.error('Failed to submit support request. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -236,9 +251,9 @@ export default function HelpSupport() {
             <p className="text-muted-foreground mt-1">Get help, learn, and connect with our community</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/')} className="gap-2">
+            <Button variant="outline" onClick={() => navigate('/dashboard')} className="gap-2">
               <FileText className="h-4 w-4" />
-              Back to Editor
+              Back to Dashboard
             </Button>
           </div>
         </div>
@@ -298,28 +313,28 @@ export default function HelpSupport() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Getting Started</h3>
                   <p className="text-sm text-muted-foreground">Learn the basics</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <Zap className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                  <Zap className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">AI Features</h3>
                   <p className="text-sm text-muted-foreground">Master AI tools</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <Video className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <Video className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Video Tutorials</h3>
                   <p className="text-sm text-muted-foreground">Watch & learn</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Live Chat</h3>
                   <p className="text-sm text-muted-foreground">Get instant help</p>
                 </CardContent>
@@ -394,8 +409,8 @@ export default function HelpSupport() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Users className="h-5 w-5 text-blue-600" />
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Users className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-medium">AI Writing Workshop</h3>
@@ -407,8 +422,8 @@ export default function HelpSupport() {
                   </div>
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Target className="h-5 w-5 text-green-600" />
+                      <div className="p-2 bg-accent rounded-lg">
+                        <Target className="h-5 w-5 text-accent-foreground" />
                       </div>
                       <div>
                         <h3 className="font-medium">Productivity Masterclass</h3>
@@ -514,7 +529,7 @@ export default function HelpSupport() {
                       <label htmlFor="message" className="text-sm font-medium">Message</label>
                       <textarea
                         id="message"
-                        className="w-full min-h-[120px] p-3 border rounded-md resize-none"
+                        className="w-full min-h-[120px] p-3 border border-input rounded-md resize-none bg-background text-foreground"
                         value={formData.message}
                         onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                         required
@@ -650,7 +665,7 @@ export default function HelpSupport() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <Award className="h-5 w-5 text-yellow-600" />
+                      <Award className="h-5 w-5 text-primary" />
                       <span className="font-medium">User of the Month</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -659,7 +674,7 @@ export default function HelpSupport() {
                   </div>
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      <TrendingUp className="h-5 w-5 text-primary" />
                       <span className="font-medium">Top Contributor</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
