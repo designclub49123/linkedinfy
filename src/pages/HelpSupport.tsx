@@ -529,7 +529,7 @@ export default function HelpSupport() {
                       <label htmlFor="message" className="text-sm font-medium">Message</label>
                       <textarea
                         id="message"
-                        className="w-full min-h-[120px] p-3 border rounded-md resize-none"
+                        className="w-full min-h-[120px] p-3 border border-input rounded-md resize-none bg-background text-foreground"
                         value={formData.message}
                         onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                         required
