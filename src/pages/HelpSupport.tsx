@@ -198,16 +198,29 @@ export default function HelpSupport() {
 
   const [formData, setFormData] = useState(contactForm);
 
+  const { user } = useAuth();
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) { toast.error('Please sign in first'); return; }
+    if (!formData.subject.trim() || !formData.message.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.from('support_tickets').insert({
+        user_id: user.id,
+        subject: formData.subject.trim(),
+        description: formData.message.trim(),
+        priority: 'medium',
+      });
+      if (error) throw error;
       toast.success('Support request submitted successfully. We\'ll get back to you soon!');
       setFormData(contactForm);
     } catch (error) {
+      console.error('Support ticket error:', error);
       toast.error('Failed to submit support request. Please try again.');
     } finally {
       setIsSubmitting(false);
