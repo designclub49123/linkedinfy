@@ -666,6 +666,8 @@ const LandingPage = React.forwardRef<HTMLDivElement>((_, ref) => {
       </section>
     </div>
   );
-};
+});
+
+LandingPage.displayName = 'LandingPage';
 
 export default LandingPage;

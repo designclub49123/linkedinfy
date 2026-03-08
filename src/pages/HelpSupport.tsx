@@ -674,7 +674,7 @@ export default function HelpSupport() {
                   </div>
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      <TrendingUp className="h-5 w-5 text-primary" />
                       <span className="font-medium">Top Contributor</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
