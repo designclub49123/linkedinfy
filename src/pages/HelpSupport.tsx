@@ -313,28 +313,28 @@ export default function HelpSupport() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Getting Started</h3>
                   <p className="text-sm text-muted-foreground">Learn the basics</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <Zap className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                  <Zap className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">AI Features</h3>
                   <p className="text-sm text-muted-foreground">Master AI tools</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <Video className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <Video className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Video Tutorials</h3>
                   <p className="text-sm text-muted-foreground">Watch & learn</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4 text-center">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h3 className="font-medium">Live Chat</h3>
                   <p className="text-sm text-muted-foreground">Get instant help</p>
                 </CardContent>
