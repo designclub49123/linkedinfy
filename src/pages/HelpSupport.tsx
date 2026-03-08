@@ -251,9 +251,9 @@ export default function HelpSupport() {
             <p className="text-muted-foreground mt-1">Get help, learn, and connect with our community</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/')} className="gap-2">
+            <Button variant="outline" onClick={() => navigate('/dashboard')} className="gap-2">
               <FileText className="h-4 w-4" />
-              Back to Editor
+              Back to Dashboard
             </Button>
           </div>
         </div>
